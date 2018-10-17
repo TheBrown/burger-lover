@@ -1,15 +1,15 @@
 import React, { Component } from "react";
-import { connect } from 'react-redux';
+import { connect } from "react-redux";
 
 import Spinner from "../../../components/UI/Spinner/Spinner";
 import Button from "../../../components/UI/Button/Button";
 import classes from "./ContactData.css";
 
 import Input from "../../../components/UI/Input/Input";
-import withErrorHandler from '../../../hoc/withErrorHandler/withErrorHandler';
+import withErrorHandler from "../../../hoc/withErrorHandler/withErrorHandler";
 
-import axios from '../../../axios-orders';
-import * as actions from '../../../store/actions/';
+import axios from "../../../axios-orders";
+import * as actions from "../../../store/actions/";
 
 class ContactData extends Component {
   state = {
@@ -100,12 +100,12 @@ class ContactData extends Component {
         valid: true
       }
     },
-    formIsValid: false,
+    formIsValid: false
   };
 
   orderHandler = e => {
     e.preventDefault();
-    
+
     const formData = {};
 
     for (let formElementIdentifier in this.state.orderForm) {
@@ -120,13 +120,14 @@ class ContactData extends Component {
       orderData: formData
     };
 
-    this.props.onOrderBurger(order);
-
-
+    this.props.onOrderBurger(order, this.props.token);
   };
 
   checkValidity(value, rules) {
     let isValid = true;
+    if (!rules) {
+      return true;
+    }
 
     if (rules.required) {
       isValid = value.trim() !== "" && isValid;
@@ -138,6 +139,16 @@ class ContactData extends Component {
 
     if (rules.maxLength) {
       isValid = value.length <= rules.maxLength && isValid;
+    }
+
+    if (rules.isEmail) {
+      const pattern = /[a-z0-9!#$%&'*+/=?^_`{|}~-]+(?:\.[a-z0-9!#$%&'*+/=?^_`{|}~-]+)*@(?:[a-z0-9](?:[a-z0-9-]*[a-z0-9])?\.)+[a-z0-9](?:[a-z0-9-]*[a-z0-9])?/;
+      isValid = pattern.test(value) && isValid;
+    }
+
+    if (rules.isNumeric) {
+      const pattern = /^\d+$/;
+      isValid = pattern.test(value) && isValid;
     }
 
     return isValid;
@@ -216,14 +227,19 @@ const mapStateToProps = state => {
   return {
     ings: state.burgerBuilder.ingredients,
     price: state.burgerBuilder.totalPrice,
-    loading: state.order.loading
-  }
-}
+    loading: state.order.loading,
+    token: state.auth.token
+  };
+};
 
 const mapDispatchToProps = dispatch => {
   return {
-  onOrderBurger: (orderData) => dispatch(actions.purchaseBurger(orderData))
+    onOrderBurger: (orderData, token) =>
+      dispatch(actions.purchaseBurger(orderData, token))
   };
-}
+};
 
-export default connect(mapStateToProps, mapDispatchToProps)(withErrorHandler(ContactData, axios));
+export default connect(
+  mapStateToProps,
+  mapDispatchToProps
+)(withErrorHandler(ContactData, axios));

@@ -1,3 +1,5 @@
+import axios from "axios";
+
 import * as actionTypes from "./actionTypes";
 
 export const authStart = () => {
@@ -13,7 +15,7 @@ export const authSuccess = authData => {
   };
 };
 
-export const authError = error => {
+export const authFail = error => {
   return {
     type: actionTypes.AUTH_FAIL,
     error: error
@@ -21,7 +23,25 @@ export const authError = error => {
 };
 
 export const auth = (email, password) => {
-    return dispatch => {
-        dispatch(authStart());
-    }
-}
+  return dispatch => {
+    dispatch(authStart());
+    const authData = {
+      email: email,
+      password: password,
+      returnSecureToken: true
+    };
+    axios
+      .post(
+        "https://www.googleapis.com/identitytoolkit/v3/relyingparty/signupNewUser?key=AIzaSyDGRG9d7qKne3X1LjvR0JeY6zYiEQ9FSVg",
+        authData
+      )
+      .then(res => {
+        console.log(res);
+        dispatch(authSuccess(res.data));
+      })
+      .catch(err => {
+        console.log(err);
+        dispatch(authFail(err));
+      });
+  };
+};
